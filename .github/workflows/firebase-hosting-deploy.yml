@@ -3,7 +3,7 @@ name: Deploy to Firebase Hosting
 on:
   push:
     branches:
-      - main  # Hangi branch'teki değişikliklerde deploy yapılacaksa belirtin
+      - main  # Hangi branch'teki değişikliklerde deploy yapılacaksa onu belirtin
 
 jobs:
   deploy:
@@ -16,17 +16,15 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: '18'  # Projenizin Node.js sürümü
+        node-version: '18'  # Projenizin Node.js sürümünü burada belirtin
 
     - name: Install Firebase CLI
       run: npm install -g firebase-tools
 
-    - name: Authenticate with Firebase
+    - name: Deploy to Firebase
       env:
         FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
       run: |
         echo $FIREBASE_SERVICE_ACCOUNT > firebase-credentials.json
-        firebase auth:login:ci --token $(cat firebase-credentials.json)
-
-    - name: Deploy to Firebase
-      run: firebase deploy --only hosting
+        firebase use --add --project $(jq -r '.project_id' firebase-credentials.json)
+        firebase deploy --only hosting --token $(cat firebase-credentials.json | jq -r '.private_key' | firebase login:ci)
