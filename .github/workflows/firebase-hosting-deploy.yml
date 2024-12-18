@@ -3,7 +3,7 @@ name: Deploy to Firebase Hosting
 on:
   push:
     branches:
-      - main  # Hangi branch'teki değişikliklerde deploy yapılacaksa onu belirtin
+      - main  # Hangi branch'teki değişikliklerde deploy yapılacaksa belirtin
 
 jobs:
   deploy:
@@ -21,10 +21,12 @@ jobs:
     - name: Install Firebase CLI
       run: npm install -g firebase-tools
 
-    - name: Deploy to Firebase
+    - name: Authenticate with Firebase
       env:
-        FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
       run: |
-        echo $FIREBASE_SERVICE_ACCOUNT > firebase-credentials.json
-        firebase use --add --project $(jq -r '.project_id' firebase-credentials.json)
-        firebase deploy --only hosting --token $(cat firebase-credentials.json | jq -r '.private_key' | firebase login:ci)
+        echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" > firebase-credentials.json
+        export GOOGLE_APPLICATION_CREDENTIALS=firebase-credentials.json
+
+    - name: Deploy to Firebase Hosting
+      run: firebase deploy --only hosting
